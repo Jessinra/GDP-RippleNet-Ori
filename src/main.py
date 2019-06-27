@@ -1,5 +1,8 @@
 import argparse
 import numpy as np
+import pickle
+import tensorflow as tf
+
 from data_loader import load_data
 from train import train
 
@@ -41,5 +44,17 @@ parser.add_argument('--using_all_hops', type=bool, default=True,
 args = parser.parse_args()
 
 show_loss = False
-data_info = load_data(args)
-train(args, data_info, show_loss)
+
+preprocessed_data_filename = "../data/movie/preprocessed_data_info_{}".format(args.n_memory)
+
+try:
+    data_info = pickle.load(open(preprocessed_data_filename, 'rb'))
+except:
+    data_info = load_data(args)
+    pickle.dump(data_info, open(preprocessed_data_filename, 'wb'))
+
+# Limit GPU usage
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+   
+train(args, data_info, show_loss, config)
